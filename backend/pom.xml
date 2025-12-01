@@ -3,7 +3,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Folosim versiunea stabila 3.2.2 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -34,19 +33,19 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- 3. Web Server (Tomcat, REST API) -->
+        <!-- 3. Web Server (REST API) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- 4. WebSockets (Chat in timp real) -->
+        <!-- 4. WebSockets (Chat Real-Time) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
-        <!-- 5. JWT (Pentru token-uri de autentificare) - LIPSEA INAINTE -->
+        <!-- 5. JWT (Token-uri) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -65,11 +64,12 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- 6. Lombok (Pentru cod mai curat, fara getteri/setteri manuali) -->
+        <!-- 6. Lombok (Versiune Fixata pentru a rezolva eroarea TypeTag) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>1.18.30</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 7. Testare -->
