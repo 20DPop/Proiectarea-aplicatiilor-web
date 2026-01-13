@@ -35,7 +35,6 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
         String username = "Guest";
 
         if (query != null && query.contains("username=")) {
-            // Un mic hack simplu pentru a lua valoarea parametrului
             try {
                 username = query.split("username=")[1].split("&")[0];
             } catch (Exception e) {
@@ -52,8 +51,9 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
         // 2. Trimitem lista de camere disponibile doar celui nou conectat
         sendJson(session, Map.of("type", "available_rooms", "content", chatRooms.keySet()));
 
-        // 3. Trimitem actualizari lobby Hangman (daca exista)
+        // 3. Trimitem actualizari lobby jocuri
         broadcastLobbyUpdate();
+        broadcastPokerLobbyUpdate();
     }
 
     @Override
@@ -64,7 +64,9 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
         // Scoatem userul din toate camerele de chat
         chatRooms.forEach((room, users) -> {
             if (users.remove(username)) {
-                try { broadcastRoomCount(room); } catch (Exception e) {}
+                try {
+                    broadcastRoomCount(room);
+                } catch (Exception e) {}
             }
         });
 
@@ -76,7 +78,6 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         JsonNode json = mapper.readTree(payload);
 
-        // Verificam sa avem un tip de mesaj
         if (!json.has("type")) return;
 
         String type = json.get("type").asText();
@@ -107,11 +108,7 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
             case "join_room":
                 String room = json.get("room").asText();
                 chatRooms.computeIfAbsent(room, k -> ConcurrentHashMap.newKeySet()).add(sender);
-
-                // Confirmare catre user
                 sendJson(session, Map.of("type", "joined_rooms", "content", List.of(room)));
-
-                // Anuntam pe toata lumea ca exista o camera noua
                 broadcastAll(Map.of("type", "available_rooms", "content", chatRooms.keySet()));
                 broadcastRoomCount(room);
                 break;
@@ -121,8 +118,7 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
                 if (chatRooms.containsKey(roomToLeave)) {
                     chatRooms.get(roomToLeave).remove(sender);
                     broadcastRoomCount(roomToLeave);
-                    // Daca e goala, o stergem
-                    if(chatRooms.get(roomToLeave).isEmpty()) {
+                    if (chatRooms.get(roomToLeave).isEmpty()) {
                         chatRooms.remove(roomToLeave);
                         broadcastAll(Map.of("type", "available_rooms", "content", chatRooms.keySet()));
                     }
@@ -135,18 +131,25 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
                 broadcastToRoom(targetRoom, sender, msgText);
                 break;
 
-            // --- JOCURI ---
-            // Aceste mesaje le delegam catre Service
+            // --- HANGMAN ---
             case "hangman_set_word":
             case "hangman_guess_letter":
                 gameService.handleHangmanMessage(sender, json, this);
+                break;
+
+            // --- POKER ---
+            case "poker_action":
+            case "poker_start_game":
+            case "poker_start_new_hand":
+            case "poker_leave_game":
+                gameService.handlePokerMessage(sender, json, this);
                 break;
         }
     }
 
     // --- METODE AJUTATOARE ---
 
-    private void broadcastAll(Object message) throws IOException {
+    public void broadcastAll(Object message) throws IOException {
         String jsonMsg = mapper.writeValueAsString(message);
         for (WebSocketSession s : sessions.keySet()) {
             if (s.isOpen()) s.sendMessage(new TextMessage(jsonMsg));
@@ -179,7 +182,7 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
                 "text", text
         );
         sendToUser(recipient, msg);
-        sendToUser(sender, msg); // Trimitem si expeditorului ca sa vada ce a scris
+        sendToUser(sender, msg);
     }
 
     private void broadcastToRoom(String room, String sender, String text) throws IOException {
@@ -208,7 +211,16 @@ public class MainWebSocketHandler extends TextWebSocketHandler {
         try {
             broadcastAll(Map.of(
                     "type", "hangman_lobby_update",
-                    "games", gameService.getAllGames()
+                    "games", gameService.getAllHangmanGames()
+            ));
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    private void broadcastPokerLobbyUpdate() {
+        try {
+            broadcastAll(Map.of(
+                    "type", "poker_lobby_update",
+                    "games", gameService.getAllPokerGames()
             ));
         } catch (IOException e) { e.printStackTrace(); }
     }

@@ -29,8 +29,10 @@ const Login = ({ onLogin }) => {
             })
             .then(data => {
                 if (data.success) {
+                    localStorage.setItem("username", data.username);
+                    localStorage.setItem("isLoggedIn", "true")
                     onLogin(data.username);
-                    navigate('/home'); // 3. NAVIGARE EXPLICITĂ SPRE HOME
+                    navigate('/home');
                 }
             })
             .catch((err) => {

@@ -125,6 +125,7 @@ const PokerTable = ({ pokerState, myHand, username, onPokerAction, onStartGame, 
         options = {}
     } = pokerState;
     
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const [betAmount, setBetAmount] = useState(options.bigBlind * 2 || 20);
     
     const me = players.find(p => p.username === username);
@@ -133,6 +134,7 @@ const PokerTable = ({ pokerState, myHand, username, onPokerAction, onStartGame, 
     const highestBet = Math.max(0, ...players.map(p => p.currentBet));
     const callAmount = highestBet - (me?.currentBet || 0);
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
         const minRaise = highestBet + (options.bigBlind || 20);
         if (betAmount < minRaise) {

@@ -16,18 +16,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()) // Dezactivam CSRF pentru ca folosim JWT
+        http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Permitem acces liber la Auth (Login/Register), WebSocket si API-ul de jocuri
-                        .requestMatchers("/api/auth/**", "/ws/**", "/api/hangman/**").permitAll()
-                        // Orice alt endpoint necesita autentificare
+                        // ATENTIE AICI: Trebuie sa apara "/api/poker/**"
+                        .requestMatchers("/api/auth/**", "/ws/**", "/api/hangman/**", "/api/poker/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
         return http.build();
     }
 
-    // Folosim BCrypt pentru a cripta parolele in baza de date
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
